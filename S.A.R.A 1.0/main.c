@@ -42,6 +42,28 @@ const char* pos1D_to_notation[] = {
   "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" 
 };
 
+const int bishop_occupancy_bitcount[] = {
+  6,  5,  5,  5,  5,  5,  5,  6, 
+  5,  5,  5,  5,  5,  5,  5,  5, 
+  5,  5,  7,  7,  7,  7,  5,  5, 
+  5,  5,  7,  9,  9,  7,  5,  5, 
+  5,  5,  7,  9,  9,  7,  5,  5, 
+  5,  5,  7,  7,  7,  7,  5,  5, 
+  5,  5,  5,  5,  5,  5,  5,  5, 
+  6,  5,  5,  5,  5,  5,  5,  6 
+};
+
+const int rook_occupancy_bitcount[] = {
+  12,  11,  11,  11,  11,  11,  11,  12, 
+  11,  10,  10,  10,  10,  10,  10,  11, 
+  11,  10,  10,  10,  10,  10,  10,  11, 
+  11,  10,  10,  10,  10,  10,  10,  11, 
+  11,  10,  10,  10,  10,  10,  10,  11, 
+  11,  10,  10,  10,  10,  10,  10,  11, 
+  11,  10,  10,  10,  10,  10,  10,  11, 
+  12,  11,  11,  11,  11,  11,  11,  12
+};
+
 // magic numbers for edges of the board
 const unsigned long long rank_1 = 255ULL;
 const unsigned long long rank_8 = 18374686479671623680ULL;
@@ -457,6 +479,16 @@ unsigned long long ith_occupancy_combination(const int ith_combination, const in
 
   return ith_occupancy_mask;
 }
+/*
+unsigned long long occupancy = mask_rook_occupancy(a1);
+for (int i = 0; i<pow(2,__builtin_popcountll(occupancy)); ++i){
+  print_bitboard(ith_occupancy_combination(i,__builtin_popcountll(occupancy),occupancy));
+}
+*/
+
+void precompute_piece_attacks(){
+
+}
 
 /* end of section ~ ~ ~ ~ ~ ~ */
 /* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
@@ -465,10 +497,14 @@ unsigned long long ith_occupancy_combination(const int ith_combination, const in
 
 int main(){
   unsigned long long bitboard = 0ULL;
-  unsigned long long occupancy = mask_rook_occupancy(a1);
+  
 
-  for (int i = 0; i<pow(2,__builtin_popcount(occupancy)); ++i){
-    print_bitboard(ith_occupancy_combination(i,__builtin_popcount(occupancy),occupancy));
+  for (int rank = 7; rank > -1; --rank){
+    for (int file = 0; file < 8; ++file){
+      int pos1D = rank*8 + file;
+      printf(" %d, ", __builtin_popcountll(mask_rook_occupancy(pos1D)));
+    }
+    printf("\n");
   }
 
   
