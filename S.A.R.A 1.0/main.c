@@ -518,8 +518,8 @@ uint64_t random_U64_number_low_population() {
   return random_U64_number() & random_U64_number() & random_U64_number();
 }
 
-uint64_t magic_number(int pos1D, int piece_occupancy_bitcount, uint64_t attack) {
-  
+uint64_t magic_number(int pos1D, int piece_occupancy_bitcount, uint64_t attacks_mask) {
+
 }
 
 void precompute_piece_attacks_mask() {
