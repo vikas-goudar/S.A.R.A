@@ -1,3 +1,0 @@
-Well I decided to name the chess engine as S.A.R.A as I have a feeling that its going to Stubornly Avoid Rational Approaches to the game of chess...
-
-
