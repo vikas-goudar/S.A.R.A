@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <math.h>
 
 // globally white -> 0 and black -> 1
 enum { white, black };
@@ -30,6 +31,17 @@ enum{
   
 */
 
+const char* pos1D_to_notation[] = {
+  "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+  "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+  "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+  "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+  "a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+  "a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+  "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+  "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" 
+};
+
 // magic numbers for edges of the board
 const unsigned long long rank_1 = 255ULL;
 const unsigned long long rank_8 = 18374686479671623680ULL;
@@ -53,24 +65,57 @@ unsigned long long king_attacks[64];
 /* important bit operations */
 
 // get i'th bit of bitboard
-int get_bit(const unsigned long long bitboard, const int pos1D){
+static inline int get_bit(const unsigned long long bitboard, const int pos1D){
   return ((bitboard & (1ULL << pos1D)) ? 1 : 0);
 }
 
 // set i'th bit of bitboard
-void set_bit(unsigned long long* bitboard, const int pos1D){
+static inline void set_bit(unsigned long long* bitboard, const int pos1D){
   *bitboard |= (1ULL << pos1D);
 }
 
 // flip i'th bit of bitboard
-void flip_bit(unsigned long long* bitboard, const int pos1D){
+static inline void flip_bit(unsigned long long* bitboard, const int pos1D){
   *bitboard ^= (1ULL << pos1D);
 }
 
 // reset i'th bit of bitboard to 0
-void reset_bit(unsigned long long* bitboard, const int pos1D){
+static inline void reset_bit(unsigned long long* bitboard, const int pos1D){
   *bitboard &= ~(1ULL << pos1D);
 }
+
+// count the number of set bit set
+// better to use inbuilt compiler intrinsics
+// __builtin_popcountll(bitboard);
+// or
+/*
+static inline int popcount(unsigned long long bitboard){
+  int count = 0;
+
+  while (bitboard){
+    bitboard &= bitboard - 1;
+    ++count;
+  }
+
+  return count;
+}
+*/
+
+
+// get LSB index
+// better to use builtin compiler intrinsics
+// __builtin_ctzll(bitboard); -> counts trailing zeroes so check first if number is 0ULL to handle edge error cases
+// or
+/*
+static inline int LSB_index(unsigned long long bitboard){
+  if (bitboard){
+    return popcount((bitboard & (~bitboard + 1)) - 1);
+  }
+  else{
+    // handle edge error cases
+  }
+}
+*/
 
 /* end of section ~ ~ ~ ~ ~ ~ */
 /* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
@@ -401,8 +446,16 @@ int main(){
   unsigned long long bitboard = 0ULL;
   unsigned long long blockers = 0ULL;
 
+  set_bit(&blockers,d7);
+  set_bit(&blockers,d2);
+  set_bit(&blockers,d1);
+  set_bit(&blockers,b4);
+  set_bit(&blockers,g4);
 
-  print_bitboard(mask_rook_attacks_given_blockers(e4,blockers));
+  print_bitboard(blockers);
+  printf("pop count: %d",__builtin_popcountll(blockers));
+  printf("index of lsb: %d",__builtin_ctzll(0ULL));
+  printf("%s",pos1D_to_notation[2]);
   
 	return 0;
 }
