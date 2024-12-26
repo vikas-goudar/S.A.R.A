@@ -1,0 +1,8 @@
+all:
+  main
+
+main: main.c
+  gcc -oFast main.c -o main.o
+
+clean:
+  rm main
