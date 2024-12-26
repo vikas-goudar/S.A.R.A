@@ -269,44 +269,44 @@ void precompute_king_attacks(unsigned long long king_attacks[64]){
   }
 }
 
-// get bishop blockers mask
-unsigned long long mask_bishop_blockers(const int pos1D){
+// get bishop occupancy mask
+unsigned long long mask_bishop_occupancy(const int pos1D){
   // in this function we use the concept of magic bitboards
 
-  // result blockers mask
-  unsigned long long blockers = 0ULL;
+  // result occupancy mask
+  unsigned long long occupancy = 0ULL;
 
   // bishop position
   int rank, file;
-  // blockers position
-  int blockers_rank, blockers_file;
+  // occupancy position
+  int occupancy_rank, occupancy_file;
 
   rank = pos1D / 8;
   file = pos1D % 8;
 
   // diagonals
   // up + right
-  for (blockers_rank = rank +  1, blockers_file = file + 1; blockers_rank < 7 && blockers_file < 7; ++blockers_rank, ++blockers_file){
-    blockers |= (1ULL << (blockers_rank * 8 + blockers_file));
+  for (occupancy_rank = rank +  1, occupancy_file = file + 1; occupancy_rank < 7 && occupancy_file < 7; ++occupancy_rank, ++occupancy_file){
+    occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
   // up + left
-  for (blockers_rank = rank +  1, blockers_file = file - 1; blockers_rank < 7 && blockers_file > 0; ++blockers_rank, --blockers_file){
-    blockers |= (1ULL << (blockers_rank * 8 + blockers_file));
+  for (occupancy_rank = rank +  1, occupancy_file = file - 1; occupancy_rank < 7 && occupancy_file > 0; ++occupancy_rank, --occupancy_file){
+    occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
   // down + right
-  for (blockers_rank = rank -  1, blockers_file = file + 1; blockers_rank > 0 && blockers_file < 7; --blockers_rank, ++blockers_file){
-    blockers |= (1ULL << (blockers_rank * 8 + blockers_file));
+  for (occupancy_rank = rank -  1, occupancy_file = file + 1; occupancy_rank > 0 && occupancy_file < 7; --occupancy_rank, ++occupancy_file){
+    occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
   // down + left
-  for (blockers_rank = rank -  1, blockers_file = file - 1; blockers_rank > 0 && blockers_file > 0; --blockers_rank, --blockers_file){
-    blockers |= (1ULL << (blockers_rank * 8 + blockers_file));
+  for (occupancy_rank = rank -  1, occupancy_file = file - 1; occupancy_rank > 0 && occupancy_file > 0; --occupancy_rank, --occupancy_file){
+    occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
 
-  return blockers;
+  return occupancy;
 }
 
-// get bishop attacks mask given blockers mask
-unsigned long long mask_bishop_attacks_given_blockers(const int pos1D, const unsigned long long blockers){
+// get bishop attacks mask given occupancy mask
+unsigned long long mask_bishop_attacks_given_occupancy(const int pos1D, const unsigned long long occupancy){
   // in this function we use the concept of magic bitboards
 
   // result attacks mask
@@ -324,28 +324,28 @@ unsigned long long mask_bishop_attacks_given_blockers(const int pos1D, const uns
   // up + right
   for (attacks_rank = rank +  1, attacks_file = file + 1; attacks_rank < 8 && attacks_file < 8; ++attacks_rank, ++attacks_file){
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & blockers){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
       break;
     }
   }
   // up + left
   for (attacks_rank = rank +  1, attacks_file = file - 1; attacks_rank < 8 && attacks_file > -1; ++attacks_rank, --attacks_file){
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & blockers){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
       break;
     }
   }
   // down + right
   for (attacks_rank = rank -  1, attacks_file = file + 1; attacks_rank > -1 && attacks_file < 8; --attacks_rank, ++attacks_file){
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & blockers){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
       break;
     }
   }
   // down + left
   for (attacks_rank = rank -  1, attacks_file = file - 1; attacks_rank > -1 && attacks_file > -1; --attacks_rank, --attacks_file){
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & blockers){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
       break;
     }
   }
@@ -353,44 +353,44 @@ unsigned long long mask_bishop_attacks_given_blockers(const int pos1D, const uns
   return attacks;
 }
 
-// get rook blockers mask
-unsigned long long mask_rook_blockers(const int pos1D){
+// get rook occupancy mask
+unsigned long long mask_rook_occupancy(const int pos1D){
   // in this function we use the concept of magic bitboards
 
-  // result blockers mask 
-  unsigned long long blockers = 0ULL;
+  // result occupancy mask 
+  unsigned long long occupancy = 0ULL;
 
   // rook position
   int rank, file;
-  // blockers position
-  int blockers_rank, blockers_file;
+  // occupancy position
+  int occupancy_rank, occupancy_file;
 
   rank = pos1D / 8;
   file = pos1D % 8;
 
   // straight lines
   // up
-  for (blockers_rank = rank +  1 , blockers_file = file; blockers_rank < 7; ++blockers_rank){
-    blockers |= (1ULL << (blockers_rank * 8 + blockers_file));
+  for (occupancy_rank = rank +  1 , occupancy_file = file; occupancy_rank < 7; ++occupancy_rank){
+    occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
   // right
-  for (blockers_rank = rank , blockers_file = file + 1;blockers_file < 7; ++blockers_file){
-    blockers |= (1ULL << (blockers_rank * 8 + blockers_file));
+  for (occupancy_rank = rank , occupancy_file = file + 1;occupancy_file < 7; ++occupancy_file){
+    occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
   // down
-  for (blockers_rank = rank -  1 , blockers_file = file; blockers_rank > 0; --blockers_rank){
-    blockers |= (1ULL << (blockers_rank * 8 + blockers_file));
+  for (occupancy_rank = rank -  1 , occupancy_file = file; occupancy_rank > 0; --occupancy_rank){
+    occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
   // left
-  for (blockers_rank = rank , blockers_file = file - 1 ; blockers_file > 0; --blockers_file){
-    blockers |= (1ULL << (blockers_rank * 8 + blockers_file));
+  for (occupancy_rank = rank , occupancy_file = file - 1 ; occupancy_file > 0; --occupancy_file){
+    occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
 
-  return blockers;
+  return occupancy;
 }
 
-// get rook attacks mask given blockers mask
-unsigned long long mask_rook_attacks_given_blockers(const int pos1D, const unsigned long long blockers){
+// get rook attacks mask given occupancy mask
+unsigned long long mask_rook_attacks_given_occupancy(const int pos1D, const unsigned long long occupancy){
   // in this function we use the concept of magic bitboards
 
   // result attacks mask
@@ -408,33 +408,54 @@ unsigned long long mask_rook_attacks_given_blockers(const int pos1D, const unsig
   // up
   for (attacks_rank = rank +  1 , attacks_file = file; attacks_rank < 8; ++attacks_rank){
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & blockers){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
       break;
     }
   }
   // right
   for (attacks_rank = rank , attacks_file = file + 1;attacks_file < 8; ++attacks_file){
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & blockers){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
       break;
     }
   }
   // down
   for (attacks_rank = rank -  1 , attacks_file = file; attacks_rank > -1; --attacks_rank){
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & blockers){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
       break;
     }
   }
   // left
   for (attacks_rank = rank , attacks_file = file - 1 ; attacks_file > -1; --attacks_file){
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & blockers){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
       break;
     }
   }
 
   return attacks;
+}
+
+// generates ith combination from all possible occupancy
+unsigned long long ith_occupancy_combination(const int ith_combination, const int bits_in_mask, unsigned long long occupancy_mask){
+  // result ith occupancy mask
+  unsigned long long ith_occupancy_mask = 0ULL;
+
+  for (int i = 0; i < bits_in_mask; ++i){
+    // LSB index
+    int pos1D = __builtin_ctzll(occupancy_mask);
+
+    // remove LSB
+    reset_bit(&occupancy_mask, pos1D);
+
+    // add occupancy if its in ith combination
+    if (ith_combination & (1 << i)){
+      ith_occupancy_mask |= (1ULL << pos1D);
+    }
+  }
+
+  return ith_occupancy_mask;
 }
 
 /* end of section ~ ~ ~ ~ ~ ~ */
@@ -444,18 +465,13 @@ unsigned long long mask_rook_attacks_given_blockers(const int pos1D, const unsig
 
 int main(){
   unsigned long long bitboard = 0ULL;
-  unsigned long long blockers = 0ULL;
+  unsigned long long occupancy = mask_rook_occupancy(a1);
 
-  set_bit(&blockers,d7);
-  set_bit(&blockers,d2);
-  set_bit(&blockers,d1);
-  set_bit(&blockers,b4);
-  set_bit(&blockers,g4);
+  for (int i = 0; i<pow(2,__builtin_popcount(occupancy)); ++i){
+    print_bitboard(ith_occupancy_combination(i,__builtin_popcount(occupancy),occupancy));
+  }
 
-  print_bitboard(blockers);
-  printf("pop count: %d",__builtin_popcountll(blockers));
-  printf("index of lsb: %d",__builtin_ctzll(0ULL));
-  printf("%s",pos1D_to_notation[2]);
+  
   
 	return 0;
 }
