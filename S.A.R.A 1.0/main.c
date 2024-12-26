@@ -1,12 +1,12 @@
 #include <stdio.h>
-#include <math.h>
+#include <stdlib.h>
+//#include <math.h>
 
 // globally white -> 0 and black -> 1
 enum { white, black };
 
-// useful for debugging
+// board ranks inverted so that a1 gets 0 and b1 gets 1 and so on ..
 enum{
-  // board ranks inverted so that a1 gets 0 and b1 gets 1 and so on ..
   a1, b1, c1, d1, e1, f1, g1, h1,
   a2, b2, c2, d2, e2, f2, g2, h2,
   a3, b3, c3, d3, e3, f3, g3, h3,
@@ -31,6 +31,7 @@ enum{
   
 */
 
+// convert pos1D to chess notation
 const char* pos1D_to_notation[] = {
   "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
   "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
@@ -107,37 +108,44 @@ static inline void reset_bit(unsigned long long* bitboard, const int pos1D){
 }
 
 // count the number of set bit set
-// better to use inbuilt compiler intrinsics
-// __builtin_popcountll(bitboard);
-// or
-/*
+
 static inline int popcount(unsigned long long bitboard){
+  return __builtin_popcountll(bitboard);
+  /*
+  if compiler doesn't support given builtin function
+  
   int count = 0;
 
   while (bitboard){
     bitboard &= bitboard - 1;
     ++count;
   }
-
   return count;
+  */
 }
-*/
+
 
 
 // get LSB index
-// better to use builtin compiler intrinsics
-// __builtin_ctzll(bitboard); -> counts trailing zeroes so check first if number is 0ULL to handle edge error cases
-// or
-/*
 static inline int LSB_index(unsigned long long bitboard){
+  if (bitboard){
+    return __builtin_ctzll(bitboard);
+  }
+  else{
+    return -1; // error case
+  }
+  /*
+  if compiler doesn't support given builtin function
+  
   if (bitboard){
     return popcount((bitboard & (~bitboard + 1)) - 1);
   }
   else{
     // handle edge error cases
   }
+  */
 }
-*/
+
 
 /* end of section ~ ~ ~ ~ ~ ~ */
 /* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
@@ -293,8 +301,6 @@ void precompute_king_attacks(unsigned long long king_attacks[64]){
 
 // get bishop occupancy mask
 unsigned long long mask_bishop_occupancy(const int pos1D){
-  // in this function we use the concept of magic bitboards
-
   // result occupancy mask
   unsigned long long occupancy = 0ULL;
 
@@ -329,8 +335,6 @@ unsigned long long mask_bishop_occupancy(const int pos1D){
 
 // get bishop attacks mask given occupancy mask
 unsigned long long mask_bishop_attacks_given_occupancy(const int pos1D, const unsigned long long occupancy){
-  // in this function we use the concept of magic bitboards
-
   // result attacks mask
   unsigned long long attacks = 0ULL;
 
@@ -377,7 +381,6 @@ unsigned long long mask_bishop_attacks_given_occupancy(const int pos1D, const un
 
 // get rook occupancy mask
 unsigned long long mask_rook_occupancy(const int pos1D){
-  // in this function we use the concept of magic bitboards
 
   // result occupancy mask 
   unsigned long long occupancy = 0ULL;
@@ -413,7 +416,6 @@ unsigned long long mask_rook_occupancy(const int pos1D){
 
 // get rook attacks mask given occupancy mask
 unsigned long long mask_rook_attacks_given_occupancy(const int pos1D, const unsigned long long occupancy){
-  // in this function we use the concept of magic bitboards
 
   // result attacks mask
   unsigned long long attacks = 0ULL;
@@ -461,12 +463,14 @@ unsigned long long mask_rook_attacks_given_occupancy(const int pos1D, const unsi
 
 // generates ith combination from all possible occupancy
 unsigned long long ith_occupancy_combination(const int ith_combination, const int bits_in_mask, unsigned long long occupancy_mask){
+  // ith combination ranges from 0 .. 2^(bits in mask) - 1
+
   // result ith occupancy mask
   unsigned long long ith_occupancy_mask = 0ULL;
 
   for (int i = 0; i < bits_in_mask; ++i){
     // LSB index
-    int pos1D = __builtin_ctzll(occupancy_mask);
+    int pos1D = LSB_index(occupancy_mask);
 
     // remove LSB
     reset_bit(&occupancy_mask, pos1D);
@@ -479,12 +483,24 @@ unsigned long long ith_occupancy_combination(const int ith_combination, const in
 
   return ith_occupancy_mask;
 }
-/*
-unsigned long long occupancy = mask_rook_occupancy(a1);
-for (int i = 0; i<pow(2,__builtin_popcountll(occupancy)); ++i){
-  print_bitboard(ith_occupancy_combination(i,__builtin_popcountll(occupancy),occupancy));
+
+unsigned int random_32bit_number(){
+  return random();
+
+  /*
+  if random() not supported (since it is only supported on POSIX systems)
+  
+  use, XORSHIFT32 algorithm
+  
+  initialize a global unsigned int variable(named state) to a random 32 bit number(non zero) first
+  unsigned int number = state;
+  number ^= number << 13;
+  number ^= number >> 17;
+  number ^= number << 5;
+  state = number;
+  return number;
+  */
 }
-*/
 
 void precompute_piece_attacks(){
 
@@ -493,20 +509,15 @@ void precompute_piece_attacks(){
 /* end of section ~ ~ ~ ~ ~ ~ */
 /* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
 
-
-
 int main(){
   unsigned long long bitboard = 0ULL;
   
-
-  for (int rank = 7; rank > -1; --rank){
-    for (int file = 0; file < 8; ++file){
-      int pos1D = rank*8 + file;
-      printf(" %d, ", __builtin_popcountll(mask_rook_occupancy(pos1D)));
-    }
-    printf("\n");
-  }
-
+  unsigned int a = random_32bit_number();
+  printf("%u \n",a);
+  a = random_32bit_number();
+  printf("%u \n",a);
+  a = random_32bit_number();
+  printf("%u \n",a);
   
   
 	return 0;
