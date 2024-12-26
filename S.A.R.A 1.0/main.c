@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 //#include <math.h>
 
 // globally white -> 0 and black -> 1
@@ -44,7 +45,7 @@ const char* pos1D_to_notation[] = {
   "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" 
 };
 
-const int bishop_occupancy_bitcount[] = {
+const int bishop_occupancy_setbits[] = {
   6,  5,  5,  5,  5,  5,  5,  6, 
   5,  5,  5,  5,  5,  5,  5,  5, 
   5,  5,  7,  7,  7,  7,  5,  5, 
@@ -55,7 +56,7 @@ const int bishop_occupancy_bitcount[] = {
   6,  5,  5,  5,  5,  5,  5,  6 
 };
 
-const int rook_occupancy_bitcount[] = {
+const int rook_occupancy_setbits[] = {
   12,  11,  11,  11,  11,  11,  11,  12, 
   11,  10,  10,  10,  10,  10,  10,  11, 
   11,  10,  10,  10,  10,  10,  10,  11, 
@@ -64,6 +65,140 @@ const int rook_occupancy_bitcount[] = {
   11,  10,  10,  10,  10,  10,  10,  11, 
   11,  10,  10,  10,  10,  10,  10,  11, 
   12,  11,  11,  11,  11,  11,  11,  12
+};
+
+unsigned long long rook_magic_numbers[64] = {
+  0xa8002c000108020ULL,
+  0x6c00049b0002001ULL,
+  0x100200010090040ULL,
+  0x2480041000800801ULL,
+  0x280028004000800ULL,
+  0x900410008040022ULL,
+  0x280020001001080ULL,
+  0x2880002041000080ULL,
+  0xa000800080400034ULL,
+  0x4808020004000ULL,
+  0x2290802004801000ULL,
+  0x411000d00100020ULL,
+  0x402800800040080ULL,
+  0xb000401004208ULL,
+  0x2409000100040200ULL,
+  0x1002100004082ULL,
+  0x22878001e24000ULL,
+  0x1090810021004010ULL,
+  0x801030040200012ULL,
+  0x500808008001000ULL,
+  0xa08018014000880ULL,
+  0x8000808004000200ULL,
+  0x201008080010200ULL,
+  0x801020000441091ULL,
+  0x800080204005ULL,
+  0x1040200040100048ULL,
+  0x120200402082ULL,
+  0xd14880480100080ULL,
+  0x12040280080080ULL,
+  0x100040080020080ULL,
+  0x9020010080800200ULL,
+  0x813241200148449ULL,
+  0x491604001800080ULL,
+  0x100401000402001ULL,
+  0x4820010021001040ULL,
+  0x400402202000812ULL,
+  0x209009005000802ULL,
+  0x810800601800400ULL,
+  0x4301083214000150ULL,
+  0x204026458e001401ULL,
+  0x40204000808000ULL,
+  0x8001008040010020ULL,
+  0x8410820820420010ULL,
+  0x1003001000090020ULL,
+  0x804040008008080ULL,
+  0x12000810020004ULL,
+  0x1000100200040208ULL,
+  0x430000a044020001ULL,
+  0x280009023410300ULL,
+  0xe0100040002240ULL,
+  0x200100401700ULL,
+  0x2244100408008080ULL,
+  0x8000400801980ULL,
+  0x2000810040200ULL,
+  0x8010100228810400ULL,
+  0x2000009044210200ULL,
+  0x4080008040102101ULL,
+  0x40002080411d01ULL,
+  0x2005524060000901ULL,
+  0x502001008400422ULL,
+  0x489a000810200402ULL,
+  0x1004400080a13ULL,
+  0x4000011008020084ULL,
+  0x26002114058042ULL
+};
+
+unsigned long long bishop_magic_numbers[64] = {
+  0x89a1121896040240ULL,
+  0x2004844802002010ULL,
+  0x2068080051921000ULL,
+  0x62880a0220200808ULL,
+  0x4042004000000ULL,
+  0x100822020200011ULL,
+  0xc00444222012000aULL,
+  0x28808801216001ULL,
+  0x400492088408100ULL,
+  0x201c401040c0084ULL,
+  0x840800910a0010ULL,
+  0x82080240060ULL,
+  0x2000840504006000ULL,
+  0x30010c4108405004ULL,
+  0x1008005410080802ULL,
+  0x8144042209100900ULL,
+  0x208081020014400ULL,
+  0x4800201208ca00ULL,
+  0xf18140408012008ULL,
+  0x1004002802102001ULL,
+  0x841000820080811ULL,
+  0x40200200a42008ULL,
+  0x800054042000ULL,
+  0x88010400410c9000ULL,
+  0x520040470104290ULL,
+  0x1004040051500081ULL,
+  0x2002081833080021ULL,
+  0x400c00c010142ULL,
+  0x941408200c002000ULL,
+  0x658810000806011ULL,
+  0x188071040440a00ULL,
+  0x4800404002011c00ULL,
+  0x104442040404200ULL,
+  0x511080202091021ULL,
+  0x4022401120400ULL,
+  0x80c0040400080120ULL,
+  0x8040010040820802ULL,
+  0x480810700020090ULL,
+  0x102008e00040242ULL,
+  0x809005202050100ULL,
+  0x8002024220104080ULL,
+  0x431008804142000ULL,
+  0x19001802081400ULL,
+  0x200014208040080ULL,
+  0x3308082008200100ULL,
+  0x41010500040c020ULL,
+  0x4012020c04210308ULL,
+  0x208220a202004080ULL,
+  0x111040120082000ULL,
+  0x6803040141280a00ULL,
+  0x2101004202410000ULL,
+  0x8200000041108022ULL,
+  0x21082088000ULL,
+  0x2410204010040ULL,
+  0x40100400809000ULL,
+  0x822088220820214ULL,
+  0x40808090012004ULL,
+  0x910224040218c9ULL,
+  0x402814422015008ULL,
+  0x90014004842410ULL,
+  0x1000042304105ULL,
+  0x10008830412a00ULL,
+  0x2520081090008908ULL,
+  0x40102000a0a60140ULL
 };
 
 // magic numbers for edges of the board
@@ -84,9 +219,6 @@ uint64_t knight_attacks[64];
 uint64_t king_attacks[64];
 
 
-/* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
-/* start of section ~ ~ ~ ~ ~ ~ */
-/* important bit operations */
 
 // get i'th bit of bitboard
 static inline int get_bit(const uint64_t bitboard, const int pos1D){
@@ -125,8 +257,6 @@ static inline int popcount(uint64_t bitboard){
   */
 }
 
-
-
 // get LSB index
 static inline int LSB_index(uint64_t bitboard){
   if (bitboard){
@@ -147,16 +277,6 @@ static inline int LSB_index(uint64_t bitboard){
   */
 }
 
-
-/* end of section ~ ~ ~ ~ ~ ~ */
-/* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
-
-
-
-/* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
-/* start of section ~ ~ ~ ~ ~ ~ */
-/* visual representation */
-
 // print bitboard
 void print_bitboard(const uint64_t bitboard){
   printf("\n");
@@ -176,15 +296,6 @@ void print_bitboard(const uint64_t bitboard){
   printf("\n    Bitboard value: %llu", bitboard);
   printf("\n\n");
 }
-
-/* end of section ~ ~ ~ ~ ~ ~ */
-/* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
-
-
-
-/* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
-/* start of section ~ ~ ~ ~ ~ ~ */
-/* attacks */
 
 // get pawn attacks mask
 uint64_t mask_pawn_attacks(const int color, const int pos1D){
@@ -463,13 +574,13 @@ uint64_t mask_rook_attacks_given_occupancy(const int pos1D, const uint64_t occup
 }
 
 // generates ith combination from all possible occupancy
-uint64_t ith_occupancy_combination(const int ith_combination, const int bits_in_mask, uint64_t occupancy_mask){
+uint64_t ith_occupancy_combination(const int ith_combination, const int setbits_in_mask, uint64_t occupancy_mask){
   // ith combination ranges from 0 .. 2^(bits in mask) - 1
 
   // result ith occupancy mask
   uint64_t ith_occupancy_mask = 0ULL;
 
-  for (int i = 0; i < bits_in_mask; ++i){
+  for (int i = 0; i < setbits_in_mask; ++i){
     // LSB index
     int pos1D = LSB_index(occupancy_mask);
 
@@ -485,15 +596,15 @@ uint64_t ith_occupancy_combination(const int ith_combination, const int bits_in_
   return ith_occupancy_mask;
 }
 
-uint32_t random_32bit_number(){
+uint32_t random_U32_number(){
   return random();
 
   /*
-  if random() not supported (since it is only supported on POSIX systems)
+  // if random() not supported (since it is only supported on POSIX systems)
   
-  use, XORSHIFT32 algorithm
+  // use, XORSHIFT32 algorithm
   
-  initialize a global unsigned int variable(named state) to a random 32 bit number(non zero) first
+  // initialize a global unsigned int variable(named state) to a random 32 bit number(non zero) first
   unsigned int number = state;
   number ^= number << 13;
   number ^= number >> 17;
@@ -501,6 +612,7 @@ uint32_t random_32bit_number(){
   state = number;
   return number;
   */
+  
 }
 
 uint64_t random_U64_number() {
@@ -517,21 +629,112 @@ uint64_t random_U64_number_low_population() {
   return random_U64_number() & random_U64_number() & random_U64_number();
 }
 
+// find a candidate for magic number that can be used for magic bitboard for bishops and rooks
+uint64_t magic_number(const int pos1D, const int occupancy_mask_setbits, const int is_bishop) {
+  uint64_t occupancy[4096];
+
+  uint64_t attacks[4096];
+
+  uint64_t attacks_used[4096];
 
 
-/* end of section ~ ~ ~ ~ ~ ~ */
-/* ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ */
+
+  uint64_t occupancy_mask = is_bishop ? mask_bishop_occupancy(pos1D): mask_rook_occupancy(pos1D);
+
+ 
+  int num_occupancy_combination = 1 << occupancy_mask_setbits;
+
+
+
+  for (int ith = 0; ith < num_occupancy_combination; ++ith) {
+    occupancy[ith] = ith_occupancy_combination(ith, occupancy_mask_setbits, occupancy_mask);
+    attacks[ith] = is_bishop ? mask_bishop_attacks_given_occupancy(pos1D, occupancy[ith]) : mask_rook_attacks_given_occupancy(pos1D, occupancy[ith]);
+  }
+
+
+
+  for (int random_count = 0; random_count < 10e8; ++random_count) {
+    uint64_t candidate_magic = random_U64_number_low_population();
+
+    if (popcount((occupancy_mask * candidate_magic) & 0xFF00000000000000ULL) < 6) continue;
+    memset(attacks_used, 0ULL, sizeof(attacks_used));
+
+    int i,fail;
+    for (i = 0, fail = 0; !fail && i < num_occupancy_combination; ++i) {
+      int hash_index = (int)((occupancy[i] * candidate_magic) >> (64 - occupancy_mask_setbits));
+      
+      
+      if (attacks_used[hash_index] == 0ULL) {
+        attacks_used[hash_index] = attacks[i];
+      }
+      
+      else if (attacks_used[hash_index] != attacks[i]) {
+        fail = 1;
+      }
+    }
+
+    if (!fail) {
+      return candidate_magic;
+    }
+  }
+  printf("Magic candidate failed");
+  return 0ULL;
+}
+
+void init_magic_numbers() {
+  printf("Rook \n");
+  for (int pos1D = 0; pos1D < 64; pos1D++) {
+    printf("0x%llxULL,\n", magic_number(pos1D, rook_occupancy_setbits[pos1D], 0));
+  }
+  printf("Bishop \n");
+  for (int pos1D = 0; pos1D < 64; pos1D++) {
+    printf("0x%llxULL,\n", magic_number(pos1D, bishop_occupancy_setbits[pos1D], 1));
+  }
+}
+
+void init_piece_occupancy_setbits(){
+  printf("rook\n");
+  for (int rank = 7; rank > -1; --rank) {
+    for (int file = 0; file < 8; ++file) {
+      int pos1D = 8*rank + file;
+      printf(" %d,", popcount(mask_rook_occupancy(pos1D)));
+    }
+    printf("\n");
+  }
+
+  printf("bishop");
+  for (int rank = 7; rank > -1; --rank) {
+    for (int file = 0; file < 8; ++file) {
+      int pos1D = 8*rank + file;
+      printf(" %d,", popcount(mask_bishop_occupancy(pos1D)));
+    }
+    printf("\n");
+  }
+
+}
+
+void init_leapers(){
+  for (int square = 0; square < 64; square++)
+    {
+        // init pawn attacks
+        pawn_attacks[white][square] = mask_pawn_attacks(white, square);
+        pawn_attacks[black][square] = mask_pawn_attacks(black, square);
+        
+        // init knight attacks
+        knight_attacks[square] = mask_knight_attacks(square);
+        
+        // init king attacks
+        king_attacks[square] = mask_king_attacks(square);
+    }
+}
+
+void init_main(){
+  init_leapers();
+  // init_magic_numbers(); -> stored in array already
+}
 
 int main(){
-  uint64_t bitboard = 0ULL;
-  
-  unsigned int a = random_32bit_number();
-  printf("%u \n",a);
-  a = random_32bit_number();
-  printf("%u \n",a);
-  a = random_32bit_number();
-  printf("%u \n",a);
-  
-  
+  init_main();
+
 	return 0;
 }
