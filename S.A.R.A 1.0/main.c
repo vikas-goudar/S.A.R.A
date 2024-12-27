@@ -2,10 +2,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
-//#include <math.h>
 
 // globally white -> 0 and black -> 1
-enum { white, black };
+enum { white, black, white_black };
 
 // board ranks inverted so that a1 gets 0 and b1 gets 1 and so on ..
 enum{
@@ -16,7 +15,7 @@ enum{
   a5, b5, c5, d5, e5, f5, g5, h5,
   a6, b6, c6, d6, e6, f6, g6, h6,
   a7, b7, c7, d7, e7, f7, g7, h7,
-  a8, b8, c8, d8, e8, f8, g8, h8 
+  a8, b8, c8, d8, e8, f8, g8, h8, out_of_bounds_pos1D
 };
 
 /*
@@ -32,6 +31,54 @@ enum{
   0  1  2  3  4  5  6  7  
   
 */
+
+// piece int refer value
+enum { P, N, B, R, Q, K, p, n, b, r, q, k };
+
+// ascii pieces
+char ascii_pieces[12] = "PNBRQKpnbrqk";
+
+// unicode pieces
+char* unicode_pieces[12] = { "♙", "♘", "♗", "♖", "♕", "♔", "♟︎", "♞", "♝", "♜", "♛", "♚" };
+
+// get refer value of ascii piece
+int ascii_piece_refer_value[] = {
+  ['P'] = P,
+  ['N'] = N,
+  ['B'] = B,
+  ['R'] = R,
+  ['Q'] = Q,
+  ['K'] = K,
+  ['p'] = p,
+  ['n'] = n,
+  ['b'] = b,
+  ['r'] = r,
+  ['q'] = q,
+  ['k'] = k
+};
+
+// since it is a global variable it is already initialized to 0 by gcc
+uint64_t piece_bitboards[12];
+
+// white black white_black
+uint64_t piece_color_mask[3];
+
+// side to move
+int side = -1;
+
+// enpassant 
+int enpassant_pos1D = out_of_bounds_pos1D;
+
+// castling rights
+/*
+0001 -> white king can castle to the king side
+0010 -> white king can castle to the queen side
+0100 -> black king can castle to the king side
+1000 -> black king can castle to the queen side
+*/
+enum { wCK = 1, wCQ = 2, bCK = 4, bCQ = 8 };
+
+
 
 // convert pos1D to chess notation
 const char* pos1D_to_notation[] = {
@@ -733,6 +780,18 @@ void init_main() {
 
 int main(){
   init_main();
+
+  set_bit(&piece_bitboards[P],e2);
+
+  print_bitboard(piece_bitboards[P]);
+
+  #ifdef WIN64
+    printf("piece: %c",ascii_pieces[P]);
+  #else
+  printf("piece: %s",unicode_pieces[P]);
+  #endif
+
+  printf("%d",ascii_piece_refer_value['K']);
 
 	return 0;
 }
