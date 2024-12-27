@@ -631,28 +631,26 @@ uint64_t random_U64_number_low_population() {
 
 // find a candidate for magic number that can be used for magic bitboard for bishops and rooks
 uint64_t magic_number(const int pos1D, const int occupancy_mask_setbits, const int is_bishop) {
+  // store all ith occupancy combinations
   uint64_t occupancy[4096];
 
+  // store all attacks given ith occupancy combination
   uint64_t attacks[4096];
 
+  // to check wether the current indexed as already been reffered by another attack
   uint64_t attacks_used[4096];
-
-
 
   uint64_t occupancy_mask = is_bishop ? mask_bishop_occupancy(pos1D): mask_rook_occupancy(pos1D);
 
- 
   int num_occupancy_combination = 1 << occupancy_mask_setbits;
 
-
-
+  // loop through all ith occupancy combination
   for (int ith = 0; ith < num_occupancy_combination; ++ith) {
     occupancy[ith] = ith_occupancy_combination(ith, occupancy_mask_setbits, occupancy_mask);
     attacks[ith] = is_bishop ? mask_bishop_attacks_given_occupancy(pos1D, occupancy[ith]) : mask_rook_attacks_given_occupancy(pos1D, occupancy[ith]);
   }
 
-
-
+  // loop to find candidate magic
   for (int random_count = 0; random_count < 10e8; ++random_count) {
     uint64_t candidate_magic = random_U64_number_low_population();
 
@@ -692,7 +690,7 @@ void init_magic_numbers() {
   }
 }
 
-void init_piece_occupancy_setbits(){
+void init_piece_occupancy_setbits() {
   printf("rook\n");
   for (int rank = 7; rank > -1; --rank) {
     for (int file = 0; file < 8; ++file) {
@@ -714,22 +712,22 @@ void init_piece_occupancy_setbits(){
 }
 
 void init_leapers(){
-  for (int square = 0; square < 64; square++)
-    {
-        // init pawn attacks
-        pawn_attacks[white][square] = mask_pawn_attacks(white, square);
-        pawn_attacks[black][square] = mask_pawn_attacks(black, square);
-        
-        // init knight attacks
-        knight_attacks[square] = mask_knight_attacks(square);
-        
-        // init king attacks
-        king_attacks[square] = mask_king_attacks(square);
-    }
+  for (int square = 0; square < 64; square++) {
+    // init pawn attacks
+    pawn_attacks[white][square] = mask_pawn_attacks(white, square);
+    pawn_attacks[black][square] = mask_pawn_attacks(black, square);
+    
+    // init knight attacks
+    knight_attacks[square] = mask_knight_attacks(square);
+    
+    // init king attacks
+    king_attacks[square] = mask_king_attacks(square);
+  }
 }
 
-void init_main(){
+void init_main() {
   init_leapers();
+  // init_piece_occupancy_setbits(); -> stored in array already
   // init_magic_numbers(); -> stored in array already
 }
 
