@@ -275,6 +275,18 @@ uint64_t knight_attacks[64];
 // king attacks table [pos1D]
 uint64_t king_attacks[64];
 
+// bishop attack masks
+uint64_t bishop_masks[64];
+
+// rook attack masks
+uint64_t rook_masks[64];
+
+// bishop attacks table [pos1D][occupancies]
+uint64_t bishop_attacks[64][512];
+
+// rook attacks table [pos1D][occupancies]
+uint64_t rook_attacks[64][4096];
+
 // =====================
 // Bit Operations
 // =====================
@@ -877,6 +889,27 @@ uint64_t magic_number(const int pos1D, const int occupancy_mask_setbits, const i
   return 0ULL;
 }
 
+// get bishop attacks
+static inline uint64_t get_bishop_attacks(int pos1D, uint64_t occupancy) {
+  uint64_t rel_occupancy = occupancy & bishop_masks[pos1D];
+  int hash_index = (occupancy * bishop_magic_numbers[pos1D]) >> (64 - bishop_occupancy_setbits[pos1D]);
+
+  return bishop_attacks[pos1D][hash_index];
+}
+
+// get rook attacks
+static inline uint64_t get_rook_attacks(int pos1D, uint64_t occupancy) {
+  uint64_t rel_occupancy = occupancy & rook_masks[pos1D];
+  int hash_index = (occupancy * rook_magic_numbers[pos1D]) >> (64 - rook_occupancy_setbits[pos1D]);
+
+  return rook_attacks[pos1D][hash_index];
+}
+
+// get queen attacks
+static inline uint64_t get_queen_attacks(int pos1D, uint64_t occupancy) {
+  return get_bishop_attacks(pos1D, occupancy) | get_rook_attacks(pos1D, occupancy);
+}
+
 // =====================
 // Init 
 // =====================
@@ -927,10 +960,52 @@ void init_leapers() {
   }
 }
 
+void init_sliders() {
+  for (int pos1D = 0; pos1D <64; ++pos1D) {
+    int set_bits;
+    int possible_combinations;
+    int hash_index;
+    // bishop
+    // occupancy mask
+    bishop_masks[pos1D] = mask_bishop_occupancy(pos1D);
+    set_bits = bishop_occupancy_setbits[pos1D];
+    possible_combinations = (1 << set_bits);
+
+    // iterating through all possible occupancies 
+    for (int ith = 0; ith < possible_combinations; ++ith) {
+      uint64_t ith_occupancy = ith_occupancy_combination(ith, set_bits, bishop_masks[pos1D]);
+
+      // hashed index
+      hash_index = (ith_occupancy * bishop_magic_numbers[pos1D]) >> (64 - set_bits);
+
+      // set bishop attacks
+      bishop_attacks[pos1D][hash_index] = mask_bishop_attacks_given_occupancy(pos1D, ith_occupancy);
+    }
+
+    // rook
+    // occupancy mask
+    rook_masks[pos1D] = mask_rook_occupancy(pos1D);
+    set_bits = rook_occupancy_setbits[pos1D];
+    possible_combinations = (1 << set_bits);
+
+    // iterating through all possible occupancies 
+    for (int ith = 0; ith < possible_combinations; ++ith) {
+      uint64_t ith_occupancy = ith_occupancy_combination(ith, set_bits, rook_masks[pos1D]);
+
+      // hashed index
+      hash_index = (ith_occupancy * rook_magic_numbers[pos1D]) >> (64 - set_bits);
+
+      // set rook attacks
+      rook_attacks[pos1D][hash_index] = mask_rook_attacks_given_occupancy(pos1D, ith_occupancy);
+    }
+  }
+}
+
 void init() {
   init_leapers();
   // init_piece_occupancy_setbits(); -> stored in array already
   // init_magic_numbers(); -> stored in array already
+  init_sliders();
 }
 
 // =====================
@@ -940,7 +1015,6 @@ void init() {
 int main() {
   init();
 
-  parse_FEN(killer_position);
-  print_board();
+  
 	return 0;
 }
