@@ -416,8 +416,10 @@ void print_board() {
       #ifdef WIN64
         printf(" %c", (piece == -1) ? '.' : ascii_pieces[piece]);
       #else
-        printf(" %s",(piece == -1) ? "." : unicode_pieces[piece]);
+        //printf(" %s",(piece == -1) ? "." : unicode_pieces[piece]);
+          printf(" %c", (piece == -1) ? '.' : ascii_pieces[piece]);
       #endif
+      
     }
     printf("\n");
   }
@@ -429,6 +431,7 @@ void print_board() {
   printf("\n\n");
 }
 
+// warning - code does not test for wrong FEN notation
 void parse_FEN(char* fen) {
  // reset piece bitboards
  memset(piece_bitboards, 0ULL, sizeof(piece_bitboards));
@@ -440,6 +443,84 @@ void parse_FEN(char* fen) {
   side = 0;
   enpassant_pos1D = out_of_bounds_pos1D;
   castle = 0;
+
+  // setting up pieces on board
+  // error checking not included !! 
+  for (int rank = 7; rank > -1 && *fen && *fen != ' '; --rank) {
+    for (int file = 0; file < 8 && *fen && *fen != ' '; ) {
+      int pos1D = rank*8 + file;
+      // if it's a piece
+      if ((*fen >= 'b' && *fen <= 'r') || (*fen >= 'B' && *fen <= 'R')) {
+        // piece type
+        int piece = ascii_piece_refer_value[*fen];
+
+        // set piece on corresponding piece bitboard
+        set_bit(&piece_bitboards[piece], pos1D);
+
+        ++file;
+        ++fen;
+      }
+
+      // unoccupied positions
+      else if (*fen >= '1' && *fen <= '9') {
+        int offset = *fen - '0';
+
+        //skip offset positions
+        file += offset;
+        ++fen;
+      }
+
+      else if(*fen == '/') {
+        ++fen;
+      }
+
+      else {
+        // error case -> unkown char
+        ++fen;
+      }
+    }
+  }
+
+  // initializing game variables
+  // error checking not included !!
+  // side to move
+  ++fen;
+  (*fen == 'w') ? (side = white) : (side = black);
+  ++fen;
+
+  // castle rights
+  ++fen;
+  while (*fen != ' ') {
+    switch (*fen) {
+      case 'K': castle |= wck; break;
+      case 'Q': castle |= wcq; break;
+      case 'k': castle |= bck; break;
+      case 'q': castle |= bcq; break;
+      case '-': break;
+    }
+    ++fen;
+  }
+
+  //en passant
+  ++fen;
+  if(*fen != '-') {
+    int file = *fen - 'a';
+    ++fen;
+    int rank = *fen - '1';
+    enpassant_pos1D = rank*8 + file;
+  }
+  else {
+    enpassant_pos1D = out_of_bounds_pos1D;
+  }
+
+  // setting up occupancy masks
+  for (int piece = P; piece <= K; ++piece) {
+    piece_color_mask[white] |= piece_bitboards[piece];
+  }
+  for (int piece = p; piece <= k; ++piece) {
+    piece_color_mask[black] |= piece_bitboards[piece];
+  }
+  piece_color_mask[white_black] |= (piece_color_mask[white] | piece_color_mask[black]);
 }
 
 
@@ -859,5 +940,7 @@ void init() {
 int main() {
   init();
 
+  parse_FEN(killer_position);
+  print_board();
 	return 0;
 }
