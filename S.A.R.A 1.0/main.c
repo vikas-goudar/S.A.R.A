@@ -268,35 +268,35 @@ uint64_t king_attacks[64];
 
 
 // get i'th bit of bitboard
-static inline int get_bit(const uint64_t bitboard, const int pos1D){
+static inline int get_bit(const uint64_t bitboard, const int pos1D) {
   return ((bitboard & (1ULL << pos1D)) ? 1 : 0);
 }
 
 // set i'th bit of bitboard
-static inline void set_bit(uint64_t* bitboard, const int pos1D){
+static inline void set_bit(uint64_t* bitboard, const int pos1D) {
   *bitboard |= (1ULL << pos1D);
 }
 
 // flip i'th bit of bitboard
-static inline void flip_bit(uint64_t* bitboard, const int pos1D){
+static inline void flip_bit(uint64_t* bitboard, const int pos1D) {
   *bitboard ^= (1ULL << pos1D);
 }
 
 // reset i'th bit of bitboard to 0
-static inline void reset_bit(uint64_t* bitboard, const int pos1D){
+static inline void reset_bit(uint64_t* bitboard, const int pos1D) {
   *bitboard &= ~(1ULL << pos1D);
 }
 
 // count the number of set bit set
 
-static inline int popcount(uint64_t bitboard){
+static inline int popcount(uint64_t bitboard) {
   return __builtin_popcountll(bitboard);
   /*
   if compiler doesn't support given builtin function
   
   int count = 0;
 
-  while (bitboard){
+  while (bitboard) {
     bitboard &= bitboard - 1;
     ++count;
   }
@@ -305,8 +305,8 @@ static inline int popcount(uint64_t bitboard){
 }
 
 // get LSB index
-static inline int LSB_index(uint64_t bitboard){
-  if (bitboard){
+static inline int LSB_index(uint64_t bitboard) {
+  if (bitboard) {
     return __builtin_ctzll(bitboard);
   }
   else{
@@ -315,7 +315,7 @@ static inline int LSB_index(uint64_t bitboard){
   /*
   if compiler doesn't support given builtin function
   
-  if (bitboard){
+  if (bitboard) {
     return popcount((bitboard & (~bitboard + 1)) - 1);
   }
   else{
@@ -325,13 +325,13 @@ static inline int LSB_index(uint64_t bitboard){
 }
 
 // print bitboard
-void print_bitboard(const uint64_t bitboard){
+void print_bitboard(const uint64_t bitboard) {
   printf("\n");
-  for (int rank = 7; rank > -1; --rank){
-    for (int file = 0; file < 8; ++file){
+  for (int rank = 7; rank > -1; --rank) {
+    for (int file = 0; file < 8; ++file) {
       int pos1D = rank*8 + file;
       // printing ranks
-      if (!file){
+      if (!file) {
         printf("    %d  ", rank + 1);
       }
       printf(" %d", get_bit(bitboard, pos1D));
@@ -344,8 +344,15 @@ void print_bitboard(const uint64_t bitboard){
   printf("\n\n");
 }
 
+// print board
+void print_board() {
+  for (int rank = 7; rank > -1; --rank) {
+    for (int file = 0; file > 0; ++file) {}
+  }
+}
+
 // get pawn attacks mask
-uint64_t mask_pawn_attacks(const int color, const int pos1D){
+uint64_t mask_pawn_attacks(const int color, const int pos1D) {
   
   // result attacks mask
   uint64_t attacks = 0ULL;
@@ -355,21 +362,21 @@ uint64_t mask_pawn_attacks(const int color, const int pos1D){
   set_bit(&bitboard, pos1D);
   
 // white pawns
-  if (!color){
-    if (bitboard & ~file_h){
+  if (!color) {
+    if (bitboard & ~file_h) {
       attacks |= (bitboard << 9);
     }
-    if (bitboard & ~file_a){
+    if (bitboard & ~file_a) {
       attacks |= (bitboard << 7);
     }
     
   }
   // black pawns
   else{
-    if (bitboard & ~file_h){
+    if (bitboard & ~file_h) {
       attacks |= (bitboard >> 7);
     }
-    if (bitboard & ~file_a){
+    if (bitboard & ~file_a) {
       attacks |= (bitboard >> 9);
     }
   }
@@ -378,15 +385,15 @@ uint64_t mask_pawn_attacks(const int color, const int pos1D){
 }
 
 // pre-compute pawn attacks
-void precompute_pawn_attacks(uint64_t pawn_attacks[2][64]){
-  for (int pos1D = 0; pos1D < 64; ++pos1D){
+void precompute_pawn_attacks(uint64_t pawn_attacks[2][64]) {
+  for (int pos1D = 0; pos1D < 64; ++pos1D) {
     pawn_attacks[white][pos1D] = mask_pawn_attacks(white,pos1D);
     pawn_attacks[black][pos1D] = mask_pawn_attacks(black,pos1D);
   }
 }
 
 // get knight attacks mask
-uint64_t mask_knight_attacks(const int pos1D){
+uint64_t mask_knight_attacks(const int pos1D) {
   // result attacks mask
   uint64_t attacks = 0ULL;
   
@@ -415,14 +422,14 @@ uint64_t mask_knight_attacks(const int pos1D){
 }
 
 // pre-compute knight attacks
-void precompute_knight_attacks(uint64_t knight_attacks[64]){
-  for (int pos1D = 0; pos1D < 64; ++pos1D){
+void precompute_knight_attacks(uint64_t knight_attacks[64]) {
+  for (int pos1D = 0; pos1D < 64; ++pos1D) {
     knight_attacks[pos1D] = mask_knight_attacks(pos1D);
   }
 }
 
 // get king attacks mask
-uint64_t mask_king_attacks(const int pos1D){
+uint64_t mask_king_attacks(const int pos1D) {
   // result attacks mask
   uint64_t attacks = 0ULL;
   
@@ -452,14 +459,14 @@ uint64_t mask_king_attacks(const int pos1D){
 }
 
 // pre-compute king attacks
-void precompute_king_attacks(uint64_t king_attacks[64]){
-  for (int pos1D = 0; pos1D < 64; ++pos1D){
+void precompute_king_attacks(uint64_t king_attacks[64]) {
+  for (int pos1D = 0; pos1D < 64; ++pos1D) {
     king_attacks[pos1D] = mask_king_attacks(pos1D);
   }
 }
 
 // get bishop occupancy mask
-uint64_t mask_bishop_occupancy(const int pos1D){
+uint64_t mask_bishop_occupancy(const int pos1D) {
   // result occupancy mask
   uint64_t occupancy = 0ULL;
 
@@ -473,19 +480,19 @@ uint64_t mask_bishop_occupancy(const int pos1D){
 
   // diagonals
   // up + right
-  for (occupancy_rank = rank +  1, occupancy_file = file + 1; occupancy_rank < 7 && occupancy_file < 7; ++occupancy_rank, ++occupancy_file){
+  for (occupancy_rank = rank +  1, occupancy_file = file + 1; occupancy_rank < 7 && occupancy_file < 7; ++occupancy_rank, ++occupancy_file) {
     occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
   // up + left
-  for (occupancy_rank = rank +  1, occupancy_file = file - 1; occupancy_rank < 7 && occupancy_file > 0; ++occupancy_rank, --occupancy_file){
+  for (occupancy_rank = rank +  1, occupancy_file = file - 1; occupancy_rank < 7 && occupancy_file > 0; ++occupancy_rank, --occupancy_file) {
     occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
   // down + right
-  for (occupancy_rank = rank -  1, occupancy_file = file + 1; occupancy_rank > 0 && occupancy_file < 7; --occupancy_rank, ++occupancy_file){
+  for (occupancy_rank = rank -  1, occupancy_file = file + 1; occupancy_rank > 0 && occupancy_file < 7; --occupancy_rank, ++occupancy_file) {
     occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
   // down + left
-  for (occupancy_rank = rank -  1, occupancy_file = file - 1; occupancy_rank > 0 && occupancy_file > 0; --occupancy_rank, --occupancy_file){
+  for (occupancy_rank = rank -  1, occupancy_file = file - 1; occupancy_rank > 0 && occupancy_file > 0; --occupancy_rank, --occupancy_file) {
     occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
 
@@ -493,7 +500,7 @@ uint64_t mask_bishop_occupancy(const int pos1D){
 }
 
 // get bishop attacks mask given occupancy mask
-uint64_t mask_bishop_attacks_given_occupancy(const int pos1D, const uint64_t occupancy){
+uint64_t mask_bishop_attacks_given_occupancy(const int pos1D, const uint64_t occupancy) {
   // result attacks mask
   uint64_t attacks = 0ULL;
 
@@ -507,30 +514,30 @@ uint64_t mask_bishop_attacks_given_occupancy(const int pos1D, const uint64_t occ
 
   // diagonals
   // up + right
-  for (attacks_rank = rank +  1, attacks_file = file + 1; attacks_rank < 8 && attacks_file < 8; ++attacks_rank, ++attacks_file){
+  for (attacks_rank = rank +  1, attacks_file = file + 1; attacks_rank < 8 && attacks_file < 8; ++attacks_rank, ++attacks_file) {
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy) {
       break;
     }
   }
   // up + left
-  for (attacks_rank = rank +  1, attacks_file = file - 1; attacks_rank < 8 && attacks_file > -1; ++attacks_rank, --attacks_file){
+  for (attacks_rank = rank +  1, attacks_file = file - 1; attacks_rank < 8 && attacks_file > -1; ++attacks_rank, --attacks_file) {
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy) {
       break;
     }
   }
   // down + right
-  for (attacks_rank = rank -  1, attacks_file = file + 1; attacks_rank > -1 && attacks_file < 8; --attacks_rank, ++attacks_file){
+  for (attacks_rank = rank -  1, attacks_file = file + 1; attacks_rank > -1 && attacks_file < 8; --attacks_rank, ++attacks_file) {
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy) {
       break;
     }
   }
   // down + left
-  for (attacks_rank = rank -  1, attacks_file = file - 1; attacks_rank > -1 && attacks_file > -1; --attacks_rank, --attacks_file){
+  for (attacks_rank = rank -  1, attacks_file = file - 1; attacks_rank > -1 && attacks_file > -1; --attacks_rank, --attacks_file) {
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy) {
       break;
     }
   }
@@ -539,7 +546,7 @@ uint64_t mask_bishop_attacks_given_occupancy(const int pos1D, const uint64_t occ
 }
 
 // get rook occupancy mask
-uint64_t mask_rook_occupancy(const int pos1D){
+uint64_t mask_rook_occupancy(const int pos1D) {
 
   // result occupancy mask 
   uint64_t occupancy = 0ULL;
@@ -554,19 +561,19 @@ uint64_t mask_rook_occupancy(const int pos1D){
 
   // straight lines
   // up
-  for (occupancy_rank = rank +  1 , occupancy_file = file; occupancy_rank < 7; ++occupancy_rank){
+  for (occupancy_rank = rank +  1 , occupancy_file = file; occupancy_rank < 7; ++occupancy_rank) {
     occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
   // right
-  for (occupancy_rank = rank , occupancy_file = file + 1;occupancy_file < 7; ++occupancy_file){
+  for (occupancy_rank = rank , occupancy_file = file + 1;occupancy_file < 7; ++occupancy_file) {
     occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
   // down
-  for (occupancy_rank = rank -  1 , occupancy_file = file; occupancy_rank > 0; --occupancy_rank){
+  for (occupancy_rank = rank -  1 , occupancy_file = file; occupancy_rank > 0; --occupancy_rank) {
     occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
   // left
-  for (occupancy_rank = rank , occupancy_file = file - 1 ; occupancy_file > 0; --occupancy_file){
+  for (occupancy_rank = rank , occupancy_file = file - 1 ; occupancy_file > 0; --occupancy_file) {
     occupancy |= (1ULL << (occupancy_rank * 8 + occupancy_file));
   }
 
@@ -574,7 +581,7 @@ uint64_t mask_rook_occupancy(const int pos1D){
 }
 
 // get rook attacks mask given occupancy mask
-uint64_t mask_rook_attacks_given_occupancy(const int pos1D, const uint64_t occupancy){
+uint64_t mask_rook_attacks_given_occupancy(const int pos1D, const uint64_t occupancy) {
 
   // result attacks mask
   uint64_t attacks = 0ULL;
@@ -589,30 +596,30 @@ uint64_t mask_rook_attacks_given_occupancy(const int pos1D, const uint64_t occup
 
   // straight lines
   // up
-  for (attacks_rank = rank +  1 , attacks_file = file; attacks_rank < 8; ++attacks_rank){
+  for (attacks_rank = rank +  1 , attacks_file = file; attacks_rank < 8; ++attacks_rank) {
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy) {
       break;
     }
   }
   // right
-  for (attacks_rank = rank , attacks_file = file + 1;attacks_file < 8; ++attacks_file){
+  for (attacks_rank = rank , attacks_file = file + 1;attacks_file < 8; ++attacks_file) {
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy) {
       break;
     }
   }
   // down
-  for (attacks_rank = rank -  1 , attacks_file = file; attacks_rank > -1; --attacks_rank){
+  for (attacks_rank = rank -  1 , attacks_file = file; attacks_rank > -1; --attacks_rank) {
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy) {
       break;
     }
   }
   // left
-  for (attacks_rank = rank , attacks_file = file - 1 ; attacks_file > -1; --attacks_file){
+  for (attacks_rank = rank , attacks_file = file - 1 ; attacks_file > -1; --attacks_file) {
     attacks |= (1ULL << (attacks_rank * 8 + attacks_file));
-    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy){
+    if ((1ULL << (attacks_rank * 8 + attacks_file)) & occupancy) {
       break;
     }
   }
@@ -621,13 +628,13 @@ uint64_t mask_rook_attacks_given_occupancy(const int pos1D, const uint64_t occup
 }
 
 // generates ith combination from all possible occupancy
-uint64_t ith_occupancy_combination(const int ith_combination, const int setbits_in_mask, uint64_t occupancy_mask){
+uint64_t ith_occupancy_combination(const int ith_combination, const int setbits_in_mask, uint64_t occupancy_mask) {
   // ith combination ranges from 0 .. 2^(bits in mask) - 1
 
   // result ith occupancy mask
   uint64_t ith_occupancy_mask = 0ULL;
 
-  for (int i = 0; i < setbits_in_mask; ++i){
+  for (int i = 0; i < setbits_in_mask; ++i) {
     // LSB index
     int pos1D = LSB_index(occupancy_mask);
 
@@ -635,7 +642,7 @@ uint64_t ith_occupancy_combination(const int ith_combination, const int setbits_
     reset_bit(&occupancy_mask, pos1D);
 
     // add occupancy if its in ith combination
-    if (ith_combination & (1 << i)){
+    if (ith_combination & (1 << i)) {
       ith_occupancy_mask |= (1ULL << pos1D);
     }
   }
@@ -643,7 +650,7 @@ uint64_t ith_occupancy_combination(const int ith_combination, const int setbits_
   return ith_occupancy_mask;
 }
 
-uint32_t random_U32_number(){
+uint32_t random_U32_number() {
   return random();
 
   /*
@@ -758,7 +765,7 @@ void init_piece_occupancy_setbits() {
 
 }
 
-void init_leapers(){
+void init_leapers() {
   for (int square = 0; square < 64; square++) {
     // init pawn attacks
     pawn_attacks[white][square] = mask_pawn_attacks(white, square);
@@ -778,20 +785,9 @@ void init_main() {
   // init_magic_numbers(); -> stored in array already
 }
 
-int main(){
+int main() {
   init_main();
 
-  set_bit(&piece_bitboards[P],e2);
-
-  print_bitboard(piece_bitboards[P]);
-
-  #ifdef WIN64
-    printf("piece: %c",ascii_pieces[P]);
-  #else
-  printf("piece: %s",unicode_pieces[P]);
-  #endif
-
-  printf("%d",ascii_piece_refer_value['K']);
 
 	return 0;
 }
