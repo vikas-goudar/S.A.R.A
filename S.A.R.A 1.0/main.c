@@ -3,6 +3,18 @@
 #include <stdint.h>
 #include <string.h>
 
+// FEN dedug positions
+#define empty_board "8/8/8/8/8/8/8/8 w - - "
+#define start_position "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1 "
+#define tricky_position "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 "
+#define killer_position "rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1"
+#define cmk_position "r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9 "
+
+
+// =====================
+// Global Variables
+// =====================
+
 // globally white -> 0 and black -> 1
 enum { white, black, white_black };
 
@@ -77,8 +89,6 @@ const char* pos1D_to_notation[] = {
   "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" 
 };
 
-
-// since it is a global variable it is already initialized to 0 by gcc
 uint64_t piece_bitboards[12];
 
 // white black white_black
@@ -91,14 +101,14 @@ int side;
 int enpassant_pos1D = out_of_bounds_pos1D;
 
 // castling rights
+enum { wck = 1, wcq = 2, bck = 4, bcq = 8 };
+int castle;
 /*
 0001 -> white king can castle to the king side
 0010 -> white king can castle to the queen side
 0100 -> black king can castle to the king side
 1000 -> black king can castle to the queen side
 */
-enum { wck = 1, wcq = 2, bck = 4, bcq = 8 };
-int castle;
 
 const int bishop_occupancy_setbits[] = {
   6,  5,  5,  5,  5,  5,  5,  6, 
@@ -265,6 +275,9 @@ uint64_t knight_attacks[64];
 // king attacks table [pos1D]
 uint64_t king_attacks[64];
 
+// =====================
+// Bit Operations
+// =====================
 
 // get i'th bit of bitboard
 static inline int get_bit(const uint64_t bitboard, const int pos1D) {
@@ -287,7 +300,6 @@ static inline void reset_bit(uint64_t* bitboard, const int pos1D) {
 }
 
 // count the number of set bit set
-
 static inline int popcount(uint64_t bitboard) {
   return __builtin_popcountll(bitboard);
   /*
@@ -322,6 +334,47 @@ static inline int LSB_index(uint64_t bitboard) {
   }
   */
 }
+
+// =====================
+// Random 
+// =====================
+
+uint32_t random_U32_number() {
+  return random();
+
+  /*
+  // if random() not supported (since it is only supported on POSIX systems)
+  
+  // use, XORSHIFT32 algorithm
+  
+  // initialize a global unsigned int variable(named state) to a random 32 bit number(non zero) first
+  unsigned int number = state;
+  number ^= number << 13;
+  number ^= number >> 17;
+  number ^= number << 5;
+  state = number;
+  return number;
+  */
+  
+}
+
+uint64_t random_U64_number() {
+    uint64_t u1, u2, u3, u4;
+    u1 = (uint64_t)(random()) & 0xFFFF;
+    u2 = (uint64_t)(random()) & 0xFFFF;
+    u3 = (uint64_t)(random()) & 0xFFFF;
+    u4 = (uint64_t)(random()) & 0xFFFF;
+    return u1 | (u2 << 16) | (u3 << 32) | (u4 << 48);
+}
+
+// sparsely populated 64 bit number
+uint64_t random_U64_number_low_population() {
+  return random_U64_number() & random_U64_number() & random_U64_number();
+}
+
+// =====================
+// Print 
+// =====================
 
 // print bitboard
 void print_bitboard(const uint64_t bitboard) {
@@ -375,6 +428,24 @@ void print_board() {
   printf("\n    Castle    : %c%c%c%c", (castle & wck) ? 'K' : '-', (castle & wcq) ? 'Q' : '-', (castle & bck) ? 'k' : '-', (castle & bcq) ? 'q' : '-');
   printf("\n\n");
 }
+
+void parse_FEN(char* fen) {
+ // reset piece bitboards
+ memset(piece_bitboards, 0ULL, sizeof(piece_bitboards));
+
+ // reset piece color mask
+ memset(piece_color_mask, 0ULL, sizeof(piece_color_mask));
+
+ // reset game variables
+  side = 0;
+  enpassant_pos1D = out_of_bounds_pos1D;
+  castle = 0;
+}
+
+
+// =====================
+// Attacks
+// =====================
 
 // get pawn attacks mask
 uint64_t mask_pawn_attacks(const int color, const int pos1D) {
@@ -675,39 +746,6 @@ uint64_t ith_occupancy_combination(const int ith_combination, const int setbits_
   return ith_occupancy_mask;
 }
 
-uint32_t random_U32_number() {
-  return random();
-
-  /*
-  // if random() not supported (since it is only supported on POSIX systems)
-  
-  // use, XORSHIFT32 algorithm
-  
-  // initialize a global unsigned int variable(named state) to a random 32 bit number(non zero) first
-  unsigned int number = state;
-  number ^= number << 13;
-  number ^= number >> 17;
-  number ^= number << 5;
-  state = number;
-  return number;
-  */
-  
-}
-
-uint64_t random_U64_number() {
-    uint64_t u1, u2, u3, u4;
-    u1 = (uint64_t)(random()) & 0xFFFF;
-    u2 = (uint64_t)(random()) & 0xFFFF;
-    u3 = (uint64_t)(random()) & 0xFFFF;
-    u4 = (uint64_t)(random()) & 0xFFFF;
-    return u1 | (u2 << 16) | (u3 << 32) | (u4 << 48);
-}
-
-// sparsely populated 64 bit number
-uint64_t random_U64_number_low_population() {
-  return random_U64_number() & random_U64_number() & random_U64_number();
-}
-
 // find a candidate for magic number that can be used for magic bitboard for bishops and rooks
 uint64_t magic_number(const int pos1D, const int occupancy_mask_setbits, const int is_bishop) {
   // store all ith occupancy combinations
@@ -758,6 +796,10 @@ uint64_t magic_number(const int pos1D, const int occupancy_mask_setbits, const i
   return 0ULL;
 }
 
+// =====================
+// Init 
+// =====================
+
 void init_magic_numbers() {
   printf("Rook \n");
   for (int pos1D = 0; pos1D < 64; pos1D++) {
@@ -804,83 +846,18 @@ void init_leapers() {
   }
 }
 
-void init_main() {
+void init() {
   init_leapers();
   // init_piece_occupancy_setbits(); -> stored in array already
   // init_magic_numbers(); -> stored in array already
 }
 
+// =====================
+// Main
+// =====================
+
 int main() {
-  init_main();
-
-  // set white pawns
-  set_bit(&piece_bitboards[P], a2);
-  set_bit(&piece_bitboards[P], b2);
-  set_bit(&piece_bitboards[P], c2);
-  set_bit(&piece_bitboards[P], d2);
-  set_bit(&piece_bitboards[P], e2);
-  set_bit(&piece_bitboards[P], f2);
-  set_bit(&piece_bitboards[P], g2);
-  set_bit(&piece_bitboards[P], h2);
-
-  // set white knights
-  set_bit(&piece_bitboards[N], b1);
-  set_bit(&piece_bitboards[N], g1);
-
-  // set white bishops
-  set_bit(&piece_bitboards[B], c1);
-  set_bit(&piece_bitboards[B], f1);
-
-  // set white rooks
-  set_bit(&piece_bitboards[R], a1);
-  set_bit(&piece_bitboards[R], h1);
-
-  // set white rooks
-  set_bit(&piece_bitboards[Q], d1);
-  set_bit(&piece_bitboards[K], e1);
-
-  // set black pawns
-  set_bit(&piece_bitboards[p], a7);
-  set_bit(&piece_bitboards[p], b7);
-  set_bit(&piece_bitboards[p], c7);
-  set_bit(&piece_bitboards[p], d7);
-  set_bit(&piece_bitboards[p], e7);
-  set_bit(&piece_bitboards[p], f7);
-  set_bit(&piece_bitboards[p], g7);
-  set_bit(&piece_bitboards[p], h7);
-
-  // set black knights
-  set_bit(&piece_bitboards[n], b8);
-  set_bit(&piece_bitboards[n], g8);
-
-  // set black bishops
-  set_bit(&piece_bitboards[b], c8);
-  set_bit(&piece_bitboards[b], f8);
-
-  // set black rooks
-  set_bit(&piece_bitboards[r], a8);
-  set_bit(&piece_bitboards[r], h8);
-
-  // set black rooks
-  set_bit(&piece_bitboards[q], d8);
-  set_bit(&piece_bitboards[k], e8);
-
-  side = black;
-
-  enpassant_pos1D = e3;
-
-  castle |= wck;
-  castle |= wcq;
-  castle |= bck;
-  castle |= bcq;
-  
-  print_board();
-
-  for (int piece = P; piece <= k; ++piece) {
-    printf("%c\n",ascii_pieces[piece]);
-    print_bitboard(piece_bitboards[piece]);
-  }
-
+  init();
 
 	return 0;
 }
