@@ -32,6 +32,14 @@ enum{
   
 */
 
+// magic numbers for edges of the board
+const uint64_t rank_1 = 255ULL;
+const uint64_t rank_8 = 18374686479671623680ULL;
+const uint64_t file_a = 72340172838076673ULL;
+const uint64_t file_b = 144680345676153346ULL;
+const uint64_t file_g = 4629771061636907072ULL;
+const uint64_t file_h = 9259542123273814144ULL;
+
 // piece int refer value
 enum { P, N, B, R, Q, K, p, n, b, r, q, k };
 
@@ -39,7 +47,7 @@ enum { P, N, B, R, Q, K, p, n, b, r, q, k };
 char ascii_pieces[12] = "PNBRQKpnbrqk";
 
 // unicode pieces
-char* unicode_pieces[12] = { "♙", "♘", "♗", "♖", "♕", "♔", "♟︎", "♞", "♝", "♜", "♛", "♚" };
+char* unicode_pieces[12] = { "♟︎", "♞", "♝", "♜", "♛", "♚", "♙", "♘", "♗", "♖", "♕", "♔"};
 
 // get refer value of ascii piece
 int ascii_piece_refer_value[] = {
@@ -57,29 +65,6 @@ int ascii_piece_refer_value[] = {
   ['k'] = k
 };
 
-// since it is a global variable it is already initialized to 0 by gcc
-uint64_t piece_bitboards[12];
-
-// white black white_black
-uint64_t piece_color_mask[3];
-
-// side to move
-int side = -1;
-
-// enpassant 
-int enpassant_pos1D = out_of_bounds_pos1D;
-
-// castling rights
-/*
-0001 -> white king can castle to the king side
-0010 -> white king can castle to the queen side
-0100 -> black king can castle to the king side
-1000 -> black king can castle to the queen side
-*/
-enum { wCK = 1, wCQ = 2, bCK = 4, bCQ = 8 };
-
-
-
 // convert pos1D to chess notation
 const char* pos1D_to_notation[] = {
   "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
@@ -91,6 +76,29 @@ const char* pos1D_to_notation[] = {
   "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
   "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8" 
 };
+
+
+// since it is a global variable it is already initialized to 0 by gcc
+uint64_t piece_bitboards[12];
+
+// white black white_black
+uint64_t piece_color_mask[3];
+
+// side to move
+int side;
+
+// enpassant 
+int enpassant_pos1D = out_of_bounds_pos1D;
+
+// castling rights
+/*
+0001 -> white king can castle to the king side
+0010 -> white king can castle to the queen side
+0100 -> black king can castle to the king side
+1000 -> black king can castle to the queen side
+*/
+enum { wck = 1, wcq = 2, bck = 4, bcq = 8 };
+int castle;
 
 const int bishop_occupancy_setbits[] = {
   6,  5,  5,  5,  5,  5,  5,  6, 
@@ -248,14 +256,6 @@ unsigned long long bishop_magic_numbers[64] = {
   0x40102000a0a60140ULL
 };
 
-// magic numbers for edges of the board
-const uint64_t rank_1 = 255ULL;
-const uint64_t rank_8 = 18374686479671623680ULL;
-const uint64_t file_a = 72340172838076673ULL;
-const uint64_t file_b = 144680345676153346ULL;
-const uint64_t file_g = 4629771061636907072ULL;
-const uint64_t file_h = 9259542123273814144ULL;
-
 // pawn attacks table [color][pos1D]
 uint64_t pawn_attacks[2][64];
 
@@ -264,7 +264,6 @@ uint64_t knight_attacks[64];
 
 // king attacks table [pos1D]
 uint64_t king_attacks[64];
-
 
 
 // get i'th bit of bitboard
@@ -328,12 +327,9 @@ static inline int LSB_index(uint64_t bitboard) {
 void print_bitboard(const uint64_t bitboard) {
   printf("\n");
   for (int rank = 7; rank > -1; --rank) {
+    printf("    %d  ", rank + 1);
     for (int file = 0; file < 8; ++file) {
       int pos1D = rank*8 + file;
-      // printing ranks
-      if (!file) {
-        printf("    %d  ", rank + 1);
-      }
       printf(" %d", get_bit(bitboard, pos1D));
     }
     printf("\n");
@@ -346,9 +342,38 @@ void print_bitboard(const uint64_t bitboard) {
 
 // print board
 void print_board() {
+  printf("\n");
   for (int rank = 7; rank > -1; --rank) {
-    for (int file = 0; file > 0; ++file) {}
+    printf("    %d  ", rank + 1);
+    for (int file = 0; file < 8; ++file) {
+      int pos1D = rank*8 + file;
+
+      // to check if piece is present
+      int piece = -1;
+
+      // loop over all piece bitboards
+      for (int bb_piece = P; bb_piece <= k; ++bb_piece) {
+        if (get_bit(piece_bitboards[bb_piece], pos1D)) {
+          piece = bb_piece;
+          break;
+        }
+      }
+      
+      // print piece according to OS
+      #ifdef WIN64
+        printf(" %c", (piece == -1) ? '.' : ascii_pieces[piece]);
+      #else
+        printf(" %s",(piece == -1) ? "." : unicode_pieces[piece]);
+      #endif
+    }
+    printf("\n");
   }
+  printf("\n        a b c d e f g h\n");
+  // print side to move
+  printf("\n    Side      : %s", side ? "black" : "white");
+  printf("\n    En passant: %s", (enpassant_pos1D == out_of_bounds_pos1D) ? "no" : pos1D_to_notation[enpassant_pos1D]);
+  printf("\n    Castle    : %c%c%c%c", (castle & wck) ? 'K' : '-', (castle & wcq) ? 'Q' : '-', (castle & bck) ? 'k' : '-', (castle & bcq) ? 'q' : '-');
+  printf("\n\n");
 }
 
 // get pawn attacks mask
@@ -787,6 +812,74 @@ void init_main() {
 
 int main() {
   init_main();
+
+  // set white pawns
+  set_bit(&piece_bitboards[P], a2);
+  set_bit(&piece_bitboards[P], b2);
+  set_bit(&piece_bitboards[P], c2);
+  set_bit(&piece_bitboards[P], d2);
+  set_bit(&piece_bitboards[P], e2);
+  set_bit(&piece_bitboards[P], f2);
+  set_bit(&piece_bitboards[P], g2);
+  set_bit(&piece_bitboards[P], h2);
+
+  // set white knights
+  set_bit(&piece_bitboards[N], b1);
+  set_bit(&piece_bitboards[N], g1);
+
+  // set white bishops
+  set_bit(&piece_bitboards[B], c1);
+  set_bit(&piece_bitboards[B], f1);
+
+  // set white rooks
+  set_bit(&piece_bitboards[R], a1);
+  set_bit(&piece_bitboards[R], h1);
+
+  // set white rooks
+  set_bit(&piece_bitboards[Q], d1);
+  set_bit(&piece_bitboards[K], e1);
+
+  // set black pawns
+  set_bit(&piece_bitboards[p], a7);
+  set_bit(&piece_bitboards[p], b7);
+  set_bit(&piece_bitboards[p], c7);
+  set_bit(&piece_bitboards[p], d7);
+  set_bit(&piece_bitboards[p], e7);
+  set_bit(&piece_bitboards[p], f7);
+  set_bit(&piece_bitboards[p], g7);
+  set_bit(&piece_bitboards[p], h7);
+
+  // set black knights
+  set_bit(&piece_bitboards[n], b8);
+  set_bit(&piece_bitboards[n], g8);
+
+  // set black bishops
+  set_bit(&piece_bitboards[b], c8);
+  set_bit(&piece_bitboards[b], f8);
+
+  // set black rooks
+  set_bit(&piece_bitboards[r], a8);
+  set_bit(&piece_bitboards[r], h8);
+
+  // set black rooks
+  set_bit(&piece_bitboards[q], d8);
+  set_bit(&piece_bitboards[k], e8);
+
+  side = black;
+
+  enpassant_pos1D = e3;
+
+  castle |= wck;
+  castle |= wcq;
+  castle |= bck;
+  castle |= bcq;
+  
+  print_board();
+
+  for (int piece = P; piece <= k; ++piece) {
+    printf("%c\n",ascii_pieces[piece]);
+    print_bitboard(piece_bitboards[piece]);
+  }
 
 
 	return 0;
