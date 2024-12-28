@@ -535,7 +535,6 @@ void parse_FEN(char* fen) {
   piece_color_mask[white_black] |= (piece_color_mask[white] | piece_color_mask[black]);
 }
 
-
 // =====================
 // Attacks
 // =====================
@@ -892,7 +891,7 @@ uint64_t magic_number(const int pos1D, const int occupancy_mask_setbits, const i
 // get bishop attacks
 static inline uint64_t get_bishop_attacks(int pos1D, uint64_t occupancy) {
   uint64_t rel_occupancy = occupancy & bishop_masks[pos1D];
-  int hash_index = (occupancy * bishop_magic_numbers[pos1D]) >> (64 - bishop_occupancy_setbits[pos1D]);
+  int hash_index = (int)((rel_occupancy * bishop_magic_numbers[pos1D]) >> (64 - bishop_occupancy_setbits[pos1D]));
 
   return bishop_attacks[pos1D][hash_index];
 }
@@ -900,7 +899,7 @@ static inline uint64_t get_bishop_attacks(int pos1D, uint64_t occupancy) {
 // get rook attacks
 static inline uint64_t get_rook_attacks(int pos1D, uint64_t occupancy) {
   uint64_t rel_occupancy = occupancy & rook_masks[pos1D];
-  int hash_index = (occupancy * rook_magic_numbers[pos1D]) >> (64 - rook_occupancy_setbits[pos1D]);
+  int hash_index = (int)((rel_occupancy * rook_magic_numbers[pos1D]) >> (64 - rook_occupancy_setbits[pos1D]));
 
   return rook_attacks[pos1D][hash_index];
 }
@@ -909,6 +908,47 @@ static inline uint64_t get_rook_attacks(int pos1D, uint64_t occupancy) {
 static inline uint64_t get_queen_attacks(int pos1D, uint64_t occupancy) {
   return get_bishop_attacks(pos1D, occupancy) | get_rook_attacks(pos1D, occupancy);
 }
+
+// is square attacked by the given side
+static inline int is_square_attacked(int pos1D, int side) {
+  // if square is attacked by white pawns
+  if ((side == white) && (pawn_attacks[black][pos1D] & piece_bitboards[P])) return 1;
+
+  // if square is attacked by black pawns
+  if ((side == black) && (pawn_attacks[white][pos1D] & piece_bitboards[p])) return 1;
+
+  // if square is attacked by knight
+  if (knight_attacks[pos1D] & ((side == white) ? piece_bitboards[N] : piece_bitboards[n])) return 1;
+
+  // if square is attacked by king
+  if (king_attacks[pos1D] & ((side == white) ? piece_bitboards[K] : piece_bitboards[k])) return 1;
+
+  // if square is attacked by bishop
+  if (get_bishop_attacks(pos1D, piece_color_mask[white_black]) & ((side == white) ? piece_bitboards[B] : piece_bitboards[b])) return 1;
+
+  // if square is attacked by rook
+  if (get_rook_attacks(pos1D, piece_color_mask[white_black]) & ((side == white) ? piece_bitboards[R] : piece_bitboards[r])) return 1;
+
+  // if square is attacked by queen  
+  if (get_queen_attacks(pos1D, piece_color_mask[white_black]) & ((side == white) ? piece_bitboards[Q] : piece_bitboards[q])) return 1;
+
+
+  return 0;
+}
+
+// prints attacked squares
+void print_attacked_squares(int side) {
+  for (int rank = 7; rank > -1; --rank) {
+    printf("    %d  ", rank + 1);
+    for (int file = 0; file < 8; ++file) {
+      int pos1D = rank*8 + file;
+      printf(" %d", is_square_attacked(pos1D, side) ? 1 : 0); 
+    }
+    printf("\n");
+  }
+  printf("\n        a b c d e f g h\n");
+}
+
 
 // =====================
 // Init 
@@ -980,8 +1020,8 @@ void init_sliders() {
 
       // set bishop attacks
       bishop_attacks[pos1D][hash_index] = mask_bishop_attacks_given_occupancy(pos1D, ith_occupancy);
+      
     }
-
     // rook
     // occupancy mask
     rook_masks[pos1D] = mask_rook_occupancy(pos1D);
@@ -997,6 +1037,8 @@ void init_sliders() {
 
       // set rook attacks
       rook_attacks[pos1D][hash_index] = mask_rook_attacks_given_occupancy(pos1D, ith_occupancy);
+      
+
     }
   }
 }
@@ -1014,7 +1056,14 @@ void init() {
 
 int main() {
   init();
+  
+  
+  parse_FEN(tricky_position);
+  //parse_FEN(start_position);
+  print_board();
+  print_bitboard(piece_color_mask[white_black]);
 
+  print_attacked_squares(white);
   
 	return 0;
 }
