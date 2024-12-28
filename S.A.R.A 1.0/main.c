@@ -909,6 +909,10 @@ static inline uint64_t get_queen_attacks(int pos1D, uint64_t occupancy) {
   return get_bishop_attacks(pos1D, occupancy) | get_rook_attacks(pos1D, occupancy);
 }
 
+// =====================
+// Move Generation
+// =====================
+
 // is square attacked by the given side
 static inline int is_square_attacked(int pos1D, int side) {
   // if square is attacked by white pawns
@@ -948,6 +952,7 @@ void print_attacked_squares(int side) {
   }
   printf("\n        a b c d e f g h\n");
 }
+
 
 
 // =====================
