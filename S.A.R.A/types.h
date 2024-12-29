@@ -1,7 +1,12 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+/*
+Thank you Stockfish for teaching me how to write all of this
+*/
+
 #include <cstdint>
+#include <cassert>
 
 namespace Sara {
     using Bitboard = uint64_t;
@@ -12,7 +17,7 @@ namespace Sara {
         COLOR_NB = 2
     };
 
-    enum CastlingRight {
+    enum CastlingRights {
         NO_CASTLING,
         WHITE_OO,
         WHITE_OOO = WHITE_OO << 1,
@@ -31,14 +36,14 @@ namespace Sara {
     };
 
     enum Piece {
-        // enum = 7, 8 not used
-        // since it preserves symmetry in bit representation of piece
-        // ex: 
-        // W_PAWN = 0001
-        // B_PAWN = 1001
+        // enum value = 7, 8 not used
+        // Since it preserves symmetry in bit representation of pieces
+        // Ex: 
+        //      W_PAWN = 0001
+        //      B_PAWN = 1001
         NO_PIECE,
         // White pieces have 4th bit = 0
-        W_PAWN = 1, W_KNIGHT, W_BISHOP, W_ROOK, W_QUEEN, W_KING,
+        W_PAWN = PAWN, W_KNIGHT, W_BISHOP, W_ROOK, W_QUEEN, W_KING,
         // Black peices have 4th bit = 1
         B_PAWN = W_PAWN + 8, B_KNIGHT, B_BISHOP, B_ROOK, B_QUEEN, B_KING,
         PIECE_NB = 16
@@ -102,6 +107,30 @@ namespace Sara {
     inline Square& operator+=(Square& s, Direction d) { return s = s+d; }
     inline Square& operator-=(Square& s, Direction d) { return s = s-d; };
 
-}
+    // Toggle color
+    constexpr Color operator~(Color c) { return Color(c ^ BLACK); }
+
+    constexpr CastlingRights operator&(Color c, CastlingRights cr) {
+        return CastlingRights((c== WHITE ? WHITE_CASTLING : BLACK_CASTLING) & cr);
+    }
+
+    constexpr Square make_square(File f, Rank r) { return Square((r << 3) + f); }
+
+    constexpr Piece make_piece(Color c, PieceType pt) { return Piece((c << 3) + pt); }
+
+    constexpr PieceType type_of(Piece p) { return PieceType(p & 7); }
+
+    constexpr Color color_of(Piece p) { 
+        assert(p != NO_PIECE);
+        return Color(p >> 3); 
+    }
+
+    constexpr bool is_ok(Square s) { return s >= SQ_A1 && s <= SQ_H8; }
+
+    constexpr File file_of(Square s) { return File(s & 7); }
+
+    constexpr Rank rank_of(Square s) { return Rank(s >> 3); }
+
+} // namespace Sara
 
 #endif

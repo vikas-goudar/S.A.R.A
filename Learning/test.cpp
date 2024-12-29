@@ -1,14 +1,18 @@
 #include <iostream>
 using namespace std;
 
-enum p {
-  a,b,c,d,e,
-  f = 0
+enum A {
+  a, b
 };
 
-int main(){
-  p var = a;
-  cout << var;
-  
+constexpr A operator+(A a, A b) { return A(int(a) + int(b)); }
+
+
+int main() {
+  constexpr A var = a;
+  constexpr A varr = b;
+  constexpr A result = var + varr;
+
+
   return 0;
 }
