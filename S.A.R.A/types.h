@@ -30,7 +30,7 @@ namespace Sara {
     };
 
     enum PieceType {
-        NO_PIECE_TYPE, ALL_PIECE_TYPE,
+        NO_PIECE_TYPE, ALL_PIECE_TYPE = 0,
         PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING,
         PIECE_TYPE_NB = 8
     };
