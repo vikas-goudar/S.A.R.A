@@ -953,7 +953,16 @@ void print_attacked_squares(int side) {
   printf("\n        a b c d e f g h\n");
 }
 
+void move_generation() {
+  int source_square, destination_square;
 
+  uint64_t temp_piece_bitboard, temp_piece_attack;
+
+  for (int piece = P; piece <= k; ++piece) {
+    temp_piece_bitboard = piece_bitboards[piece];
+    
+  }
+}
 
 // =====================
 // Init 
